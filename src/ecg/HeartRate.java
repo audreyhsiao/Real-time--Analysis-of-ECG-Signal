@@ -14,8 +14,13 @@ public class HeartRate {
         return Q.pipeline(
             PeakDetection.qPeaks(),
             // consecutive pairs → interval
-            Q.sWindow2((t0, t1) -> (t1 - t0) * 1000.0 / 360.0)
+            Q.sWindow2((t0, t1) -> (t1 - t0) * 1000.0 / 360.0),
+            Q.map(interval -> {
+                System.out.println("DEBUG RR interval (ms): " + interval);
+                return interval;
+            })
         );
+        
     }
 
 	// Average heart rate (over entire signal) in bpm.

@@ -10,18 +10,28 @@ public class TrainModel {
 	public static Query<Integer,Double> qLengthAvg() {
 		// take the length‐transform stream, then fold into its average
 		return Q.pipeline(
+
 			PeakDetection.qLength(),
 			Q.foldAvg()
 		);
 	}
 
 	public static void main(String[] args) {
-		System.out.println("***********************************************");
-		System.out.println("***** Algorithm for finding the threshold *****");
-		System.out.println("***********************************************");
-		System.out.println();
-
-		Q.execute(Data.ecgStream("100-all.csv"), qLengthAvg(), S.printer());
+	
+			System.out.println("***********************************************");
+			System.out.println("***** Algorithm for finding the threshold *****");
+			System.out.println("***********************************************\n");
+			Q.execute(
+				Data.ecgStream("100.csv"),
+				qLengthAvg(),
+				S.printer()
+			  );
+		// 	Q.execute(
+		// 	  Data.ecgStream("100-all.csv"),
+		// 	  qLengthAvg(),
+		// 	  S.printer()
+		// 	);
+		// }
 	}
 
 }

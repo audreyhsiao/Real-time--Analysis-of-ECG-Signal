@@ -6,10 +6,7 @@ import java.util.Iterator;
 public class Data {
 
 	// TODO: Update the path to the datasets
-	private static final String PATH = "../../data/"; // Relative path to the data directory
-		// "/home/konstantinos/Dropbox/Work/" +
-		// "Courses-Rice/COMP 418-518/Spring 2024/homeworks/" +
-		// "homework 5/homework5-code-solutions/data/";
+	private static final String PATH ="data/";
 
 	private Data() {
 		// nothing to do
@@ -35,6 +32,7 @@ public class Data {
 		while (it.hasNext()) {
 			System.out.println(it.next());
 		}
+		System.out.println("End of ECG dataset stream.");
 	}
 
 }
