@@ -16,9 +16,59 @@ public class PeakDetection {
 
 	public static Query<Integer,Double> qLength() {
 		// adjust >> smooth >> deriv >> length
+		return new Query<>() {
+            // buffers & counters
+            private final double[] xbuf = new double[5];
+            private int xpos, xcnt;
+            private final double[] ybuf = new double[3];
+            private int ypos, ycnt;
+            private final double[] dbuf = new double[41];
+            private int dpos, dcnt;
 
-		// TODO
-		return null;
+            @Override
+            public void start(dsl.Sink<Double> sink) {
+                xpos = xcnt = ypos = ycnt = dpos = dcnt = 0;
+            }
+			 @Override
+            public void next(Integer raw, dsl.Sink<Double> sink) {
+                // 1) adjust
+                double x = raw - 1024.0;
+                // update xbuf
+                xbuf[xpos] = x;
+                xpos = (xpos + 1) % 5;
+                if (xcnt < 5) { xcnt++; return; }
+
+                // 2) smooth: average of xbuf
+                double sumx = 0;
+                for (double v : xbuf) sumx += v;
+                double y = sumx / 5.0;
+                // update ybuf
+                ybuf[ypos] = y;
+                ypos = (ypos + 1) % 3;
+                if (ycnt < 3) { ycnt++; return; }
+
+                // 3) deriv: (y[n] - y[n-2]) / 2
+                int newest  = (ypos + 2) % 3; // just-emitted idx
+                int oldest2 = ypos;          // two ago
+                double d = (ybuf[newest] - ybuf[oldest2]) / 2.0;
+                // update dbuf
+                dbuf[dpos] = d;
+                dpos = (dpos + 1) % 41;
+                if (dcnt < 41) { dcnt++; return; }
+
+                // 4) curve length over 41 last d’s
+                double L = 0;
+                for (double dv : dbuf) {
+                    L += Math.sqrt(1.0 + dv*dv);
+                }
+                sink.next(L);
+            }
+
+            @Override
+            public void end(dsl.Sink<Double> sink) { }
+        };
+    }
+		
 	}
 
 	// In order to detect peaks we need both the raw (or adjusted)
@@ -26,8 +76,23 @@ public class PeakDetection {
 	// Use the datatype VTL and implement the class Detect.
 
 	public static Query<Integer,Long> qPeaks() {
-		// TODO
-		return null;
+		// 1) sample‐indexing: scan(-1, (i,raw)->i+1)  ==> Query<Integer,Long>
+        var idxQ = Q.scan(-1L, (i, raw) -> i + 1);
+        // 2) raw value passthrough: id()
+        var rawQ = Q.id();
+        // 3) make VT
+        Query<Integer,VT> toVT = Q.<Integer, Long, Integer, VT>parallel(
+            idxQ, rawQ,
+            (ts, v) -> new VT(v, ts)
+        );
+        // 4) attach length → VTL
+        Query<Integer,VTL> toVTL = Q.parallel(
+            toVT, qLength(),
+            (vt, L) -> vt.extendl(L)
+        );
+        // 5) detect peaks
+        return Q.pipeline(toVTL, new Detect());
+    
 	}
 
 	public static void main(String[] args) {
