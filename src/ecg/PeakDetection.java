@@ -104,4 +104,4 @@ public class PeakDetection {
 		Q.execute(Data.ecgStream("100.csv"), qPeaks(), S.printer());
 	}
 
-}
+
