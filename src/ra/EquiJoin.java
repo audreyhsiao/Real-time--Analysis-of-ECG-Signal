@@ -1,5 +1,7 @@
 package ra;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Function;
 
 import dsl.Query;
@@ -18,8 +20,14 @@ import utils.Pair;
 public class EquiJoin<A,B,T> implements Query<Or<A,B>,Pair<A,B>> {
 
 	// TODO
+	private final Function<A,T> f;
+    private final Function<B,T> g;
+    private final List<A> leftBuffer = new ArrayList<>();
+    private final List<B> rightBuffer = new ArrayList<>();
 
 	private EquiJoin(Function<A,T> f, Function<B,T> g) {
+		this.f = f;
+        this.g = g;
 		// TODO
 	}
 
@@ -30,11 +38,31 @@ public class EquiJoin<A,B,T> implements Query<Or<A,B>,Pair<A,B>> {
 	@Override
 	public void start(Sink<Pair<A,B>> sink) {
 		// TODO
+
 	}
 
 	@Override
 	public void next(Or<A,B> item, Sink<Pair<A,B>> sink) {
 		// TODO
+		if (item.isLeft()) {
+            A a = item.getLeft();
+            T key = f.apply(a);
+            for (B b : rightBuffer) {
+                if (key.equals(g.apply(b))) {
+					sink.next(new Pair<A, B>(a, b));
+                }
+            }
+            leftBuffer.add(a);
+        } else {
+            B b = item.getRight();
+            T key = g.apply(b);
+            for (A a : leftBuffer) {
+                if (key.equals(f.apply(a))) {
+                    sink.next(new Pair<>(a, b));
+                }
+            }
+            rightBuffer.add(b);
+        }
 	}
 
 	@Override

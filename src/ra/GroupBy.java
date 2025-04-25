@@ -21,6 +21,7 @@ import utils.functions.Func2;
 public class GroupBy<K,A,B> implements Query<Pair<K,A>,Pair<K,B>> {
 
 	// TODO
+	private 
 
 	private GroupBy(B init, Func2<B,A,B> op) {
 		// TODO
@@ -43,6 +44,8 @@ public class GroupBy<K,A,B> implements Query<Pair<K,A>,Pair<K,B>> {
 	@Override
 	public void end(Sink<Pair<K,B>> sink) {
 		// TODO
+		// output all aggregates(k,b)
+
 	}
 	
 }
